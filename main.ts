@@ -38,7 +38,6 @@ let state = ST_INIT;
 // JOYSTICK
 basic.forever(function(){
     value_joystick = pins.analogReadPin(PIN_JOYSTICK);
-    value_button = pins.digitalReadPin(PIN_BUTTON);
     if (value_joystick > VALUE_CENTER + VALUE_DEADZONE) {
         Player.move(-1);
         pause(TIME_HOLD);
@@ -46,10 +45,15 @@ basic.forever(function(){
         Player.move(1);
         pause(TIME_HOLD);
     }
+})
+
+basic.forever(function(){
+    value_button = pins.digitalReadPin(PIN_BUTTON);
     if (value_button === PIN_PRESSED) {
-        if(!bullet_exists){
+        if (!bullet_exists) {
             shoot();
         }
+        pause(TIME_HOLD);
     }
 })
 
@@ -59,8 +63,9 @@ input.onButtonPressed(Button.A, function () {
 })
 
 input.onButtonPressed(Button.AB, function () {
-    Bullet = game.createSprite(Player.get(LedSpriteProperty.X), Player.get(LedSpriteProperty.Y));
-    bullet_exists = true;
+    if (!bullet_exists) {
+        shoot();
+    }
 })
 
 input.onButtonPressed(Button.B, function () {
@@ -78,15 +83,16 @@ basic.forever(function () {
         Enemy = game.createSprite(randint(0, 4), 0);
         state = ST_MOVE;
     } else if (state === ST_MOVE){
-        if (Enemy.isTouching(Player)) {
-            game_over();
+        for (let i = 0; i <= 4; i++){
+            pause(interval);
+            Enemy.change(LedSpriteProperty.Y, 1);
+            if (Enemy.isTouching(Player)) {
+                Enemy.delete();
+                game_over();
+            }
         }
-        if (Enemy.get(LedSpriteProperty.Y) >= 4){
-            Enemy.delete();
-            state = ST_NEW_ENEMY;
-        }
-        pause(interval);
-        Enemy.change(LedSpriteProperty.Y, 1);
+        Enemy.delete();
+        state = ST_NEW_ENEMY;
     }
 })
 
